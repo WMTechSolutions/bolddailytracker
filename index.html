@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#000000">
 <title>Onward BOLD Call Tracker</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%238b3dff'/><text x='16' y='23' font-size='20' font-weight='800' text-anchor='middle' fill='%23ffffff' font-family='sans-serif'>B</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%236735a3'/><text x='16' y='23' font-size='20' font-weight='800' text-anchor='middle' fill='%23ffffff' font-family='sans-serif'>B</text></svg>">
 </head>
 <body>
 <canvas id="fx"></canvas>
@@ -13,7 +13,7 @@
 
 <!-- LOGIN -->
 <div class="wrap hide" id="auth">
-  <header><h1>Onward <b>BOLD</b> · Conversation Tracker</h1></header>
+  <header><h1><img class="logo big" src="/logo.png" alt="Onward BOLD"></h1></header>
   <div class="card" style="max-width:420px;margin:40px auto">
     <h2 id="auth-title">Sign in</h2>
     <form id="authform">
@@ -30,7 +30,7 @@
 
 <div class="wrap hide" id="app">
   <header>
-    <h1>Onward <b>BOLD</b> · Conversation Tracker</h1>
+    <h1><img class="logo" src="/logo.png" alt="Onward BOLD"></h1>
     <div style="text-align:right"><div class="date" id="today"></div><a href="#" id="signout" class="date" style="color:var(--mute)">Sign out</a></div>
   </header>
   <nav id="nav">
@@ -46,9 +46,9 @@
       <div class="hero">
         <div class="ring">
           <svg width="170" height="170" viewBox="0 0 170 170">
-            <circle cx="85" cy="85" r="72" fill="none" stroke="#2e2342" stroke-width="14"/>
+            <circle cx="85" cy="85" r="72" fill="none" stroke="#2b1f40" stroke-width="14"/>
             <circle id="ringfg" cx="85" cy="85" r="72" fill="none" stroke="url(#g)" stroke-width="14" stroke-linecap="round" stroke-dasharray="452.4" stroke-dashoffset="452.4" style="transition:stroke-dashoffset .6s"/>
-            <defs><linearGradient id="g"><stop offset="0" stop-color="#8b3dff"/><stop offset="1" stop-color="#d0a2ff"/></linearGradient></defs>
+            <defs><linearGradient id="g"><stop offset="0" stop-color="#6735a3"/><stop offset="1" stop-color="#a47be0"/></linearGradient></defs>
           </svg>
           <div class="mid"><div class="big" id="rcount">0</div><div class="sub" id="rgoal">of 20 today</div></div>
         </div>

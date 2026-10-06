@@ -1,6 +1,6 @@
 :root{
-  --bg:#000000; --card:#0f0b18; --card2:#1a1326; --line:#2e2342; --text:#f4f0ff; --mute:#a79bc4;
-  --accent:#8b3dff; --accent2:#c79bff; --good:#2ecc8f; --bad:#ff5d6c; --blue:#4f8cff;
+  --bg:#000000; --card:#0d0914; --card2:#181024; --line:#2b1f40; --text:#f4f0ff; --mute:#a79bc4;
+  --accent:#6735a3; --accent2:#b794ee; --good:#2ecc8f; --bad:#ff5d6c; --blue:#4f8cff;
 }
 *{box-sizing:border-box}
 html,body{margin:0}
@@ -24,7 +24,7 @@ nav button.on{background:var(--accent);color:#ffffff}
 .hero .info{flex:1;min-width:200px}
 .hero .info .t{font-size:20px;font-weight:700;margin-bottom:4px}
 .pill{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--card2);color:var(--mute);margin:2px 4px 2px 0}
-.pill.warn{background:#2d1650;color:var(--accent2)} .pill.ok{background:#12402e;color:var(--good)}
+.pill.warn{background:#2a1647;color:var(--accent2)} .pill.ok{background:#12402e;color:var(--good)}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
 .stat{background:var(--card2);border-radius:12px;padding:10px 12px}
 .stat .n{font-size:22px;font-weight:800}.stat .l{font-size:12px;color:var(--mute)}
@@ -54,13 +54,13 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--accent);border-c
 .entry .nt{font-size:14px;margin-top:3px;white-space:pre-wrap}
 .tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;margin-right:4px;background:var(--card2)}
 .tag.current{background:#16355f;color:#8db8ff}.tag.past{background:#4a1d3d;color:#f0a6d8}.tag.biz{background:#14423a;color:#6fe0c0}
-.tag.one{background:#2d1650;color:var(--accent2)}
+.tag.one{background:#2a1647;color:var(--accent2)}
 .x{background:none;border:0;color:var(--mute);cursor:pointer;font-size:18px;padding:2px 6px}
 .x:hover{color:var(--bad)}
 .empty{color:var(--mute);text-align:center;padding:18px 0}
 .day{display:grid;grid-template-columns:54px 1fr 44px;gap:10px;align-items:center;margin:9px 0}
 .day .bar{margin:0}
-.day.today .d{color:var(--accent);font-weight:800}
+.day.today .d{color:var(--accent2);font-weight:800}
 .day .d{font-weight:600;font-size:14px}.day .c{text-align:right;font-weight:800}
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .toolbar input,.toolbar select{flex:1;min-width:140px}
@@ -69,3 +69,7 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:50}
 .toast.show{opacity:1}
 .hide{display:none!important}
 .days{display:flex;gap:6px;flex-wrap:wrap}
+.logo{height:64px;width:auto;display:block}
+.logo.big{height:110px;margin:0 auto}
+@media(max-width:520px){.logo{height:52px}}
+#auth header{justify-content:center;margin-top:24px}

@@ -32,7 +32,7 @@ export async function exportXLSX(entries, from, to, weeklyGoal) {
   const wb = new ExcelJS.Workbook();
   wb.creator = 'Onward BOLD Tracker';
 
-  const PURPLE = 'FF8B3DFF', INK = 'FFFFFFFF', LIGHT = 'FFF3F5FA';
+  const PURPLE = 'FF6735A3', INK = 'FFFFFFFF', LIGHT = 'FFF3F5FA';
   const head = row => row.eachCell(c => {
     c.font = { bold: true, color: { argb: INK } };
     c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PURPLE } };
