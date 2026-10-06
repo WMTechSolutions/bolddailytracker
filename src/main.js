@@ -248,7 +248,7 @@ const cv = $('fx'), cx = cv.getContext('2d'); let parts = [], raf = 0;
 function size() { cv.width = innerWidth * devicePixelRatio; cv.height = innerHeight * devicePixelRatio; }
 addEventListener('resize', size); size();
 function confetti(big) {
-  const cols = ['#ff7a1a', '#ffb347', '#2ecc8f', '#4f8cff', '#ff5d6c', '#c4a6ff', '#ffffff'], r = devicePixelRatio;
+  const cols = ['#8b3dff', '#c79bff', '#b266ff', '#4f8cff', '#ff5dc8', '#2ecc8f', '#ffffff'], r = devicePixelRatio;
   const n = big ? 420 : 220;
   for (let i = 0; i < n; i++) {
     const side = i % 3;

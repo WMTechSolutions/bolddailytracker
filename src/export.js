@@ -32,10 +32,10 @@ export async function exportXLSX(entries, from, to, weeklyGoal) {
   const wb = new ExcelJS.Workbook();
   wb.creator = 'Onward BOLD Tracker';
 
-  const ORANGE = 'FFFF7A1A', INK = 'FF1A0D00', LIGHT = 'FFF3F5FA';
+  const PURPLE = 'FF8B3DFF', INK = 'FFFFFFFF', LIGHT = 'FFF3F5FA';
   const head = row => row.eachCell(c => {
     c.font = { bold: true, color: { argb: INK } };
-    c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: ORANGE } };
+    c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PURPLE } };
     c.alignment = { vertical: 'middle' };
   });
 
