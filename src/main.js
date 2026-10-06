@@ -273,9 +273,10 @@ function renderNumbers() {
   const conv = S.entries.filter(e => e.two && wk.includes(e.date));
   const agent = conv.filter(e => ['client', 'current', 'past'].includes(e.cat)).length;
   const recruit = conv.filter(e => e.cat === 'recruit').length;
+  const biz = conv.filter(e => e.cat === 'biz').length;
   const row = (label, n) => `<div class="numrow"><div class="nl">${label}</div><div class="nv">${n}</div></div>`;
-  $('nw-auto').innerHTML = row('Conversations Made', agent) + (S.settings.leader ? row('Recruit Conversations Made', recruit) : '')
-    + `<div class="date" style="margin-top:6px">Counted from the two-way conversations you logged (${conv.length} total this week toward your ${S.settings.weekly}, including business customers).</div>`;
+  $('nw-auto').innerHTML = row('Conversations Made', agent) + (S.settings.leader ? row('Recruit Conversations Made', recruit) + row('Business Customer Conversations Made', biz) : '')
+    + `<div class="date" style="margin-top:6px">Counted from the two-way conversations you logged (${conv.length} total this week toward your ${S.settings.weekly}, including recruits and business customers).</div>`;
   const nums = S.numbers[week] || {};
   const stepper = n => `<div class="numrow"><div class="nl">${n.l}</div><div class="step">
     <button data-nm="${n.k}" data-d="-1" aria-label="minus">−</button>

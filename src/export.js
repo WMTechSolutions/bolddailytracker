@@ -77,9 +77,10 @@ export async function exportXLSX(entries, from, to, weeklyGoal, numbers = {}, is
   ]);
   if (isLeader) section('LEADERSHIP', [
     ['Recruit Conversations Made', two.filter(e => e.cat === 'recruit').length],
+    ['Business Customer Conversations Made', two.filter(e => e.cat === 'biz').length],
     ...LEADER_NUMS.map(n => [n.r, sums[n.k] || 0]),
   ]);
-  r.addRow(['Conversations Made = two-way conversations with Real Estate Clients, Current Agents and Past Agents.']).font = { italic: true, color: { argb: 'FF888888' } };
+  r.addRow(['Conversations Made = two-way conversations with Real Estate Clients, Current Agents and Past Agents. Recruit and Business Customer conversations are listed under Leadership.']).font = { italic: true, color: { argb: 'FF888888' } };
 
   // ---- Summary ----
   const s = wb.addWorksheet('Summary');
