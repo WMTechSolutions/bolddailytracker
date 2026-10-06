@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0e1420">
+<title>Onward BOLD Call Tracker</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23ff7a1a'/><text x='16' y='23' font-size='20' font-weight='800' text-anchor='middle' fill='%231a0d00' font-family='sans-serif'>B</text></svg>">
+</head>
+<body>
+<canvas id="fx"></canvas>
+<div class="toast" id="toast"></div>
+
+<!-- LOGIN -->
+<div class="wrap hide" id="auth">
+  <header><h1>Onward <b>BOLD</b> · Conversation Tracker</h1></header>
+  <div class="card" style="max-width:420px;margin:40px auto">
+    <h2 id="auth-title">Sign in</h2>
+    <form id="authform">
+      <label class="f">Email</label>
+      <input type="email" id="a-email" required autocomplete="email">
+      <label class="f">Password</label>
+      <input type="password" id="a-pass" required minlength="6" autocomplete="current-password">
+      <button class="btn full" type="submit" id="a-submit">Sign in</button>
+    </form>
+    <p class="date" style="margin-top:14px"><a href="#" id="a-switch" style="color:var(--accent2)">Need an account? Create one</a></p>
+    <p class="date" id="a-msg"></p>
+  </div>
+</div>
+
+<div class="wrap hide" id="app">
+  <header>
+    <h1>Onward <b>BOLD</b> · Conversation Tracker</h1>
+    <div style="text-align:right"><div class="date" id="today"></div><a href="#" id="signout" class="date" style="color:var(--mute)">Sign out</a></div>
+  </header>
+  <nav id="nav">
+    <button data-t="today" class="on">Today</button>
+    <button data-t="week">This Week</button>
+    <button data-t="people">People</button>
+    <button data-t="settings">Settings</button>
+  </nav>
+
+  <!-- TODAY -->
+  <section id="tab-today">
+    <div class="card">
+      <div class="hero">
+        <div class="ring">
+          <svg width="170" height="170" viewBox="0 0 170 170">
+            <circle cx="85" cy="85" r="72" fill="none" stroke="#2b3754" stroke-width="14"/>
+            <circle id="ringfg" cx="85" cy="85" r="72" fill="none" stroke="url(#g)" stroke-width="14" stroke-linecap="round" stroke-dasharray="452.4" stroke-dashoffset="452.4" style="transition:stroke-dashoffset .6s"/>
+            <defs><linearGradient id="g"><stop offset="0" stop-color="#ff7a1a"/><stop offset="1" stop-color="#ffb347"/></linearGradient></defs>
+          </svg>
+          <div class="mid"><div class="big" id="rcount">0</div><div class="sub" id="rgoal">of 20 today</div></div>
+        </div>
+        <div class="info">
+          <div class="t" id="headline"></div>
+          <div id="pills"></div>
+          <div id="detail" class="date" style="margin-top:6px"></div>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="n" id="s-week">0</div><div class="l">this week / <span id="s-wg">100</span></div></div>
+        <div class="stat"><div class="n" id="s-left">0</div><div class="l">still needed</div></div>
+        <div class="stat"><div class="n" id="s-att">0</div><div class="l">attempts today</div></div>
+      </div>
+      <div class="bar"><i id="weekbar" style="width:0"></i></div>
+    </div>
+
+    <div class="card">
+      <h2>Log a conversation</h2>
+      <form id="form" autocomplete="off">
+        <label class="f">Name (agent or business)</label>
+        <input type="text" id="name" list="known" placeholder="Start typing…" required>
+        <datalist id="known"></datalist>
+
+        <label class="f">They are a…</label>
+        <div class="chips" id="cat">
+          <input type="radio" name="cat" id="c1" value="current" checked><label for="c1">Current Agent</label>
+          <input type="radio" name="cat" id="c2" value="past"><label for="c2">Past Agent</label>
+          <input type="radio" name="cat" id="c3" value="biz"><label for="c3">Business Customer</label>
+        </div>
+
+        <label class="f">How</label>
+        <div class="chips">
+          <input type="radio" name="ch" id="h1" value="Call" checked><label for="h1">📞 Call</label>
+          <input type="radio" name="ch" id="h2" value="Text"><label for="h2">💬 Text</label>
+          <input type="radio" name="ch" id="h3" value="DM"><label for="h3">✉️ DM</label>
+        </div>
+
+        <label class="toggle"><input type="checkbox" id="two" checked>
+          <span><b>Two-way conversation</b><br><span class="date">They actually responded. Uncheck for voicemail / no reply (tracked as an attempt, doesn't count toward your goal).</span></span>
+        </label>
+
+        <div class="row2">
+          <div><label class="f">Phone / handle (optional)</label><input type="text" id="phone"></div>
+          <div><label class="f">Date</label><input type="date" id="date"></div>
+        </div>
+        <label class="f">Notes / follow-up (optional)</label>
+        <textarea id="notes" placeholder="What did you talk about? Next step?"></textarea>
+        <button class="btn full" type="submit" id="logbtn">Log it</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Today's log <span id="logcount"></span></h2>
+      <div id="todaylog"></div>
+    </div>
+  </section>
+
+  <!-- WEEK -->
+  <section id="tab-week" class="hide">
+    <div class="card"><h2>This week</h2><div id="weekdays"></div><div id="weeksum" class="date" style="margin-top:14px"></div></div>
+    <div class="card"><h2>Breakdown (two-way conversations this week)</h2><div id="breakdown"></div></div>
+  </section>
+
+  <!-- PEOPLE -->
+  <section id="tab-people" class="hide">
+    <div class="card">
+      <div class="toolbar">
+        <input type="text" id="q" placeholder="Search people…">
+        <select id="filt"><option value="">All types</option><option value="current">Current Agents</option><option value="past">Past Agents</option><option value="biz">Business Customers</option></select>
+      </div>
+      <div id="people"></div>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section id="tab-settings" class="hide">
+    <div class="card">
+      <h2>Goal</h2>
+      <label class="f">Weekly two-way conversations</label>
+      <input type="number" id="set-weekly" min="1">
+      <label class="f">Days you work (the weekly goal is spread across these)</label>
+      <div class="chips days" id="set-days"></div>
+      <p class="date">Each day's goal = what's still needed this week ÷ work days left (including today). Miss a day and tomorrow's goal goes up automatically; overshoot and it comes down.</p>
+    </div>
+    <div class="card">
+      <h2>Export a report to turn in</h2>
+      <div class="row2">
+        <div><label class="f">From</label><input type="date" id="x-from"></div>
+        <div><label class="f">To</label><input type="date" id="x-to"></div>
+      </div>
+      <div class="toolbar" style="margin-top:14px">
+        <button class="btn" id="exp-xlsx">Download Excel (.xlsx)</button>
+        <button class="btn ghost" id="exp-csv">CSV</button>
+      </div>
+      <div class="toolbar">
+        <button class="btn ghost" id="x-week">This week</button>
+        <button class="btn ghost" id="x-lweek">Last week</button>
+        <button class="btn ghost" id="x-month">This month</button>
+      </div>
+      <p class="date">The Excel file has a Summary sheet (totals, daily counts, breakdowns) and a Log sheet with every entry in the range.</p>
+    </div>
+    <div class="card">
+      <h2>Your data</h2>
+      <p class="date">Saved securely in your Supabase account, so it's the same on your phone and computer.</p>
+      <div class="toolbar">
+        <button class="btn ghost" id="imp">Import old backup (JSON)</button>
+        <button class="btn ghost" id="fxtest">🎉 Test confetti</button>
+      </div>
+      <input type="file" id="impfile" accept=".json" class="hide">
+    </div>
+  </section>
+</div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

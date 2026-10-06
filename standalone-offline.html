@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Onward BOLD Call Tracker</title>
+<style>
+:root{
+  --bg:#0e1420; --card:#171f30; --card2:#1e2840; --line:#2b3754; --text:#eef2fb; --mute:#93a0bd;
+  --accent:#ff7a1a; --accent2:#ffb347; --good:#2ecc8f; --bad:#ff5d6c; --blue:#4f8cff;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh}
+.wrap{max-width:880px;margin:0 auto;padding:16px 16px 80px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+h1{font-size:20px;margin:0;letter-spacing:.3px}
+h1 b{color:var(--accent)}
+.date{color:var(--mute);font-size:14px}
+nav{display:flex;gap:6px;background:var(--card);padding:5px;border-radius:12px;margin-bottom:16px}
+nav button{flex:1;border:0;background:none;color:var(--mute);padding:10px 6px;border-radius:8px;font:inherit;font-weight:600;cursor:pointer}
+nav button.on{background:var(--accent);color:#1a0d00}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:16px}
+.card h2{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--mute);margin:0 0 12px}
+.hero{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.ring{position:relative;width:170px;height:170px;flex:none}
+.ring svg{transform:rotate(-90deg)}
+.ring .mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .big{font-size:42px;font-weight:800;line-height:1}
+.ring .sub{color:var(--mute);font-size:13px}
+.hero .info{flex:1;min-width:200px}
+.hero .info .t{font-size:20px;font-weight:700;margin-bottom:4px}
+.pill{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--card2);color:var(--mute);margin:2px 4px 2px 0}
+.pill.warn{background:#4a2a12;color:var(--accent2)} .pill.ok{background:#12402e;color:var(--good)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.stat{background:var(--card2);border-radius:12px;padding:10px 12px}
+.stat .n{font-size:22px;font-weight:800}.stat .l{font-size:12px;color:var(--mute)}
+.bar{height:10px;background:var(--card2);border-radius:99px;overflow:hidden;margin-top:12px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width .5s}
+label.f{display:block;font-size:13px;color:var(--mute);margin:12px 0 6px}
+input[type=text],input[type=tel],input[type=date],input[type=number],textarea,select{width:100%;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:11px 12px;font:inherit}
+textarea{resize:vertical;min-height:60px}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--accent);border-color:transparent}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chips input{display:none}
+.chips label{padding:9px 14px;border-radius:99px;background:var(--card2);border:1px solid var(--line);cursor:pointer;font-weight:600;font-size:14px;user-select:none}
+.chips input:checked+label{background:var(--accent);border-color:var(--accent);color:#1a0d00}
+.toggle{display:flex;align-items:center;gap:10px;margin-top:14px;padding:12px;border-radius:12px;background:var(--card2);cursor:pointer}
+.toggle input{width:20px;height:20px;accent-color:var(--good)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:520px){.row2{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr 1fr}.ring{margin:0 auto}}
+.btn{border:0;border-radius:12px;padding:13px 18px;font:inherit;font-weight:800;cursor:pointer;background:var(--accent);color:#1a0d00}
+.btn.full{width:100%;margin-top:16px;font-size:17px}
+.btn.ghost{background:var(--card2);color:var(--text);font-weight:600;padding:9px 14px;font-size:14px}
+.btn:active{transform:scale(.98)}
+.entry{display:flex;gap:10px;align-items:flex-start;padding:11px 0;border-top:1px solid var(--line)}
+.entry:first-child{border-top:0}
+.entry .main{flex:1;min-width:0}
+.entry .nm{font-weight:700}
+.entry .meta{font-size:13px;color:var(--mute)}
+.entry .nt{font-size:14px;margin-top:3px;white-space:pre-wrap}
+.tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;margin-right:4px;background:var(--card2)}
+.tag.current{background:#16355f;color:#8db8ff}.tag.past{background:#3b2a5a;color:#c4a6ff}.tag.biz{background:#14423a;color:#6fe0c0}
+.tag.one{background:#4a2a12;color:var(--accent2)}
+.x{background:none;border:0;color:var(--mute);cursor:pointer;font-size:18px;padding:2px 6px}
+.x:hover{color:var(--bad)}
+.empty{color:var(--mute);text-align:center;padding:18px 0}
+.day{display:grid;grid-template-columns:54px 1fr 44px;gap:10px;align-items:center;margin:9px 0}
+.day .bar{margin:0}
+.day.today .d{color:var(--accent);font-weight:800}
+.day .d{font-weight:600;font-size:14px}.day .c{text-align:right;font-weight:800}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.toolbar input,.toolbar select{flex:1;min-width:140px}
+canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:50}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--good);color:#04251a;font-weight:800;padding:12px 20px;border-radius:99px;z-index:60;box-shadow:0 8px 30px #0008;opacity:0;pointer-events:none;transition:.3s}
+.toast.show{opacity:1}
+.hide{display:none!important}
+.days{display:flex;gap:6px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<div class="toast" id="toast"></div>
+<div class="wrap">
+  <header>
+    <h1>Onward <b>BOLD</b> · Conversation Tracker</h1>
+    <div class="date" id="today"></div>
+  </header>
+  <nav id="nav">
+    <button data-t="today" class="on">Today</button>
+    <button data-t="week">This Week</button>
+    <button data-t="people">People</button>
+    <button data-t="settings">Settings</button>
+  </nav>
+
+  <!-- TODAY -->
+  <section id="tab-today">
+    <div class="card">
+      <div class="hero">
+        <div class="ring">
+          <svg width="170" height="170" viewBox="0 0 170 170">
+            <circle cx="85" cy="85" r="72" fill="none" stroke="#2b3754" stroke-width="14"/>
+            <circle id="ringfg" cx="85" cy="85" r="72" fill="none" stroke="url(#g)" stroke-width="14" stroke-linecap="round" stroke-dasharray="452.4" stroke-dashoffset="452.4" style="transition:stroke-dashoffset .6s"/>
+            <defs><linearGradient id="g"><stop offset="0" stop-color="#ff7a1a"/><stop offset="1" stop-color="#ffb347"/></linearGradient></defs>
+          </svg>
+          <div class="mid"><div class="big" id="rcount">0</div><div class="sub" id="rgoal">of 20 today</div></div>
+        </div>
+        <div class="info">
+          <div class="t" id="headline"></div>
+          <div id="pills"></div>
+          <div id="detail" class="date" style="margin-top:6px"></div>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="n" id="s-week">0</div><div class="l">this week / <span id="s-wg">100</span></div></div>
+        <div class="stat"><div class="n" id="s-left">0</div><div class="l">still needed</div></div>
+        <div class="stat"><div class="n" id="s-att">0</div><div class="l">attempts today</div></div>
+      </div>
+      <div class="bar"><i id="weekbar" style="width:0"></i></div>
+    </div>
+
+    <div class="card">
+      <h2>Log a conversation</h2>
+      <form id="form" autocomplete="off">
+        <label class="f">Name (agent or business)</label>
+        <input type="text" id="name" list="known" placeholder="Start typing…" required>
+        <datalist id="known"></datalist>
+
+        <label class="f">They are a…</label>
+        <div class="chips" id="cat">
+          <input type="radio" name="cat" id="c1" value="current" checked><label for="c1">Current Agent</label>
+          <input type="radio" name="cat" id="c2" value="past"><label for="c2">Past Agent</label>
+          <input type="radio" name="cat" id="c3" value="biz"><label for="c3">Business Customer</label>
+        </div>
+
+        <label class="f">How</label>
+        <div class="chips">
+          <input type="radio" name="ch" id="h1" value="Call" checked><label for="h1">📞 Call</label>
+          <input type="radio" name="ch" id="h2" value="Text"><label for="h2">💬 Text</label>
+          <input type="radio" name="ch" id="h3" value="DM"><label for="h3">✉️ DM</label>
+        </div>
+
+        <label class="toggle"><input type="checkbox" id="two" checked>
+          <span><b>Two-way conversation</b><br><span class="date">They actually responded. Uncheck for voicemail / no reply (tracked as an attempt, doesn't count toward your goal).</span></span>
+        </label>
+
+        <div class="row2">
+          <div><label class="f">Phone / handle (optional)</label><input type="text" id="phone"></div>
+          <div><label class="f">Date</label><input type="date" id="date"></div>
+        </div>
+        <label class="f">Notes / follow-up (optional)</label>
+        <textarea id="notes" placeholder="What did you talk about? Next step?"></textarea>
+        <button class="btn full" type="submit">Log it</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Today's log <span id="logcount"></span></h2>
+      <div id="todaylog"></div>
+    </div>
+  </section>
+
+  <!-- WEEK -->
+  <section id="tab-week" class="hide">
+    <div class="card"><h2>This week</h2><div id="weekdays"></div><div id="weeksum" class="date" style="margin-top:14px"></div></div>
+    <div class="card"><h2>Breakdown (two-way conversations this week)</h2><div id="breakdown"></div></div>
+  </section>
+
+  <!-- PEOPLE -->
+  <section id="tab-people" class="hide">
+    <div class="card">
+      <div class="toolbar">
+        <input type="text" id="q" placeholder="Search people…">
+        <select id="filt"><option value="">All types</option><option value="current">Current Agents</option><option value="past">Past Agents</option><option value="biz">Business Customers</option></select>
+      </div>
+      <div id="people"></div>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section id="tab-settings" class="hide">
+    <div class="card">
+      <h2>Goal</h2>
+      <label class="f">Weekly two-way conversations</label>
+      <input type="number" id="set-weekly" min="1">
+      <label class="f">Days you work (the weekly goal is spread across these)</label>
+      <div class="chips days" id="set-days"></div>
+      <p class="date">Each day's goal = what's still needed this week ÷ work days left (including today). Miss a day and tomorrow's goal goes up automatically; overshoot and it comes down.</p>
+    </div>
+    <div class="card">
+      <h2>Your data</h2>
+      <p class="date">Everything is saved in this browser on this computer. Download a backup now and then.</p>
+      <div class="toolbar">
+        <button class="btn ghost" id="exp-csv">Export CSV</button>
+        <button class="btn ghost" id="exp-json">Backup (JSON)</button>
+        <button class="btn ghost" id="imp">Restore backup</button>
+        <button class="btn ghost" id="fxtest">🎉 Test confetti</button>
+      </div>
+      <input type="file" id="impfile" accept=".json" class="hide">
+    </div>
+  </section>
+</div>
+
+<script>
+(()=>{
+const KEY='onwardbold.tracker.v1';
+const CATS={current:'Current Agent',past:'Past Agent',biz:'Business Customer'};
+const DAYN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+let S=load();
+function load(){
+  try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.entries)return s}catch(e){}
+  return{entries:[],settings:{weekly:100,days:[1,2,3,4,5]},celebrated:{}};
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('⚠️ Could not save — browser storage blocked')}}
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const dkey=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const fromKey=k=>{const[y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d)};
+function weekStart(d){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()-((x.getDay()+6)%7));return x}
+function weekKeys(){const ws=weekStart(new Date());return[...Array(7)].map((_,i)=>{const d=new Date(ws);d.setDate(ws.getDate()+i);return dkey(d)})}
+
+// ---- goal math ----
+function calc(){
+  const wk=weekKeys(), today=dkey(new Date()), wg=+S.settings.weekly||100, days=S.settings.days;
+  const conv=S.entries.filter(e=>e.two&&wk.includes(e.date));
+  const before=conv.filter(e=>e.date<today).length;
+  const todayN=conv.filter(e=>e.date===today).length;
+  const weekN=conv.length;
+  const isWork=days.includes(new Date().getDay());
+  const daysLeft=wk.filter(k=>k>=today&&days.includes(fromKey(k).getDay())).length;
+  const remStart=Math.max(0,wg-before);
+  let goal,mode;
+  if(remStart===0){goal=0;mode='done'}
+  else if(isWork){goal=Math.ceil(remStart/Math.max(1,daysLeft));mode='work'}
+  else if(daysLeft>0){goal=0;mode='rest'}
+  else{goal=remStart;mode='catch'}
+  const base=Math.ceil(wg/Math.max(1,days.length));
+  return{wk,today,wg,weekN,todayN,before,goal,mode,daysLeft,base,remaining:Math.max(0,wg-weekN),
+    attempts:S.entries.filter(e=>e.date===today&&!e.two).length};
+}
+
+// ---- render ----
+function render(){
+  const c=calc();
+  $('today').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+  const pct=c.goal>0?Math.min(1,c.todayN/c.goal):(c.mode==='done'?1:0);
+  $('ringfg').style.strokeDashoffset=452.4*(1-pct);
+  $('rcount').textContent=c.todayN;
+  $('rgoal').textContent=c.goal>0?`of ${c.goal} today`:'today';
+  let head,pills='',detail='';
+  if(c.mode==='done'){head='🏆 Weekly goal crushed!';detail=`You've hit ${c.wg} two-way conversations this week. Anything extra is bonus.`}
+  else if(c.mode==='rest'){head='Rest day';detail=`Not a work day, but anything you log still counts toward the week. Next work day you'll need about ${Math.ceil(c.remaining/Math.max(1,c.daysLeft))}.`}
+  else{
+    const left=Math.max(0,c.goal-c.todayN);
+    head=left===0?'🎉 Daily goal hit!':`${left} more to hit today's goal`;
+    if(c.goal>c.base)pills+=`<span class="pill warn">+${c.goal-c.base} catch-up (normal pace is ${c.base})</span>`;
+    else if(c.goal<c.base)pills+=`<span class="pill ok">${c.base-c.goal} under normal pace — you're ahead</span>`;
+    else pills+=`<span class="pill">On pace: ${c.base}/day</span>`;
+    pills+=`<span class="pill">${c.daysLeft} work day${c.daysLeft===1?'':'s'} left incl. today</span>`;
+    detail=c.mode==='catch'?'Work days are over for the week — this is what\'s left to finish strong.':
+      (c.goal>c.base?`You were behind going into today, so today's target went up from ${c.base} to ${c.goal}.`:'Hit this and you stay on track for 100.');
+  }
+  $('headline').textContent=head;$('pills').innerHTML=pills;$('detail').textContent=detail;
+  $('s-week').textContent=c.weekN;$('s-wg').textContent=c.wg;$('s-left').textContent=c.remaining;$('s-att').textContent=c.attempts;
+  $('weekbar').style.width=Math.min(100,c.weekN/c.wg*100)+'%';
+
+  // known names
+  const names=people();
+  $('known').innerHTML=names.map(p=>`<option value="${esc(p.name)}">`).join('');
+
+  // today's log
+  const te=S.entries.filter(e=>e.date===c.today).sort((a,b)=>b.ts-a.ts);
+  $('logcount').textContent=te.length?`· ${te.length}`:'';
+  $('todaylog').innerHTML=te.length?te.map(entryHTML).join(''):'<div class="empty">Nothing logged yet today. Go get \'em.</div>';
+
+  renderWeek(c);renderPeople();
+}
+function entryHTML(e){
+  const t=new Date(e.ts).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+  return`<div class="entry"><div class="main"><div class="nm">${esc(e.name)}</div>
+  <div class="meta"><span class="tag ${e.cat}">${CATS[e.cat]}</span>${e.two?'':'<span class="tag one">No reply</span>'}${esc(e.ch)} · ${t}${e.phone?' · '+esc(e.phone):''}</div>
+  ${e.notes?`<div class="nt">${esc(e.notes)}</div>`:''}</div>
+  <button class="x" data-del="${e.id}" title="Delete">✕</button></div>`;
+}
+function renderWeek(c){
+  const mx=Math.max(c.base,...c.wk.map(k=>S.entries.filter(e=>e.two&&e.date===k).length),1);
+  $('weekdays').innerHTML=c.wk.map(k=>{
+    const n=S.entries.filter(e=>e.two&&e.date===k).length, d=fromKey(k);
+    return`<div class="day ${k===c.today?'today':''}"><div class="d">${DAYN[d.getDay()]} ${d.getDate()}</div>
+    <div class="bar"><i style="width:${n/mx*100}%"></i></div><div class="c">${n}</div></div>`}).join('');
+  $('weeksum').textContent=`${c.weekN} of ${c.wg} (${Math.round(c.weekN/c.wg*100)}%) · ${c.remaining} to go · ${c.daysLeft} work day${c.daysLeft===1?'':'s'} left`;
+  const wkE=S.entries.filter(e=>e.two&&c.wk.includes(e.date));
+  const by=(f)=>{const m={};wkE.forEach(e=>m[f(e)]=(m[f(e)]||0)+1);return m};
+  const cat=by(e=>CATS[e.cat]),ch=by(e=>e.ch);
+  const line=m=>Object.keys(m).length?Object.entries(m).map(([k,v])=>`<span class="pill">${esc(k)}: ${v}</span>`).join(''):'<span class="date">No data yet</span>';
+  $('breakdown').innerHTML=`<div>${line(cat)}</div><div style="margin-top:8px">${line(ch)}</div>`;
+}
+function people(){
+  const m={};
+  [...S.entries].sort((a,b)=>a.ts-b.ts).forEach(e=>{
+    const k=e.name.trim().toLowerCase();
+    const p=m[k]||(m[k]={name:e.name.trim(),cat:e.cat,phone:'',n:0,last:0,lastDate:''});
+    p.cat=e.cat;if(e.phone)p.phone=e.phone;if(e.two)p.n++;p.last=e.ts;p.lastDate=e.date;p.name=e.name.trim();
+  });
+  return Object.values(m).sort((a,b)=>a.name.localeCompare(b.name));
+}
+function renderPeople(){
+  const q=$('q').value.trim().toLowerCase(),f=$('filt').value;
+  const list=people().filter(p=>(!f||p.cat===f)&&(!q||p.name.toLowerCase().includes(q)||p.phone.toLowerCase().includes(q)));
+  $('people').innerHTML=list.length?list.map(p=>`<div class="entry"><div class="main"><div class="nm">${esc(p.name)}</div>
+    <div class="meta">${p.n} conversation${p.n===1?'':'s'} · last ${fromKey(p.lastDate).toLocaleDateString(undefined,{month:'short',day:'numeric'})}${p.phone?' · '+esc(p.phone):''}</div></div>
+    <select data-cat="${esc(p.name.toLowerCase())}" style="width:auto">${Object.entries(CATS).map(([k,v])=>`<option value="${k}" ${k===p.cat?'selected':''}>${v}</option>`).join('')}</select></div>`).join('')
+    :'<div class="empty">No one here yet.</div>';
+}
+
+// ---- events ----
+$('nav').onclick=e=>{const t=e.target.dataset.t;if(!t)return;
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b===e.target));
+  ['today','week','people','settings'].forEach(x=>$('tab-'+x).classList.toggle('hide',x!==t));};
+$('name').addEventListener('input',()=>{
+  const p=people().find(p=>p.name.toLowerCase()===$('name').value.trim().toLowerCase());
+  if(p){document.querySelector(`input[name=cat][value=${p.cat}]`).checked=true;if(p.phone&&!$('phone').value)$('phone').value=p.phone}
+});
+$('form').onsubmit=ev=>{
+  ev.preventDefault();
+  const before=calc();
+  const e={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),ts:Date.now(),
+    name:$('name').value.trim(),cat:document.querySelector('input[name=cat]:checked').value,
+    ch:document.querySelector('input[name=ch]:checked').value,two:$('two').checked,
+    phone:$('phone').value.trim(),notes:$('notes').value.trim(),date:$('date').value||dkey(new Date())};
+  if(!e.name)return;
+  S.entries.push(e);save();
+  $('name').value='';$('phone').value='';$('notes').value='';$('two').checked=true;$('date').value=dkey(new Date());
+  render();
+  const after=calc();
+  if(e.two&&after.mode!=='rest'&&before.mode!=='done'){
+    const weekHit=before.weekN<before.wg&&after.weekN>=after.wg;
+    const dayHit=before.goal>0&&before.todayN<before.goal&&after.todayN>=before.goal&&!S.celebrated[after.today];
+    if(weekHit){S.celebrated[after.today]=1;save();confetti(true);toast('🏆 WEEKLY GOAL HIT! 100 conversations!')}
+    else if(dayHit){S.celebrated[after.today]=1;save();confetti();toast('🎉 Daily goal hit — nice work!')}
+  }
+  $('name').focus();
+};
+document.addEventListener('click',ev=>{
+  const d=ev.target.dataset.del;
+  if(d&&confirm('Delete this entry?')){S.entries=S.entries.filter(e=>e.id!==d);
+    // if today's goal is no longer met, allow celebrating again
+    const c=calc();if(c.goal>0&&c.todayN<c.goal)delete S.celebrated[c.today];
+    save();render()}
+});
+$('people').addEventListener('change',ev=>{const k=ev.target.dataset.cat;if(!k)return;
+  S.entries.forEach(e=>{if(e.name.trim().toLowerCase()===k)e.cat=ev.target.value});save();render()});
+$('q').oninput=renderPeople;$('filt').onchange=renderPeople;
+
+// settings
+function renderSettings(){
+  $('set-weekly').value=S.settings.weekly;
+  $('set-days').innerHTML=[1,2,3,4,5,6,0].map(i=>`<input type="checkbox" id="wd${i}" ${S.settings.days.includes(i)?'checked':''}><label for="wd${i}">${DAYN[i]}</label>`).join('');
+}
+$('set-weekly').onchange=()=>{S.settings.weekly=Math.max(1,+$('set-weekly').value||100);save();render()};
+$('set-days').onchange=()=>{const d=[1,2,3,4,5,6,0].filter(i=>$('wd'+i).checked);
+  if(!d.length){toast('Pick at least one work day');renderSettings();return}S.settings.days=d;save();render()};
+function download(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+$('exp-csv').onclick=()=>{
+  const q=v=>`"${String(v??'').replace(/"/g,'""')}"`;
+  const rows=[['Date','Time','Name','Category','Channel','Two-way','Phone/Handle','Notes'],
+    ...[...S.entries].sort((a,b)=>a.ts-b.ts).map(e=>[e.date,new Date(e.ts).toLocaleTimeString(),e.name,CATS[e.cat],e.ch,e.two?'Yes':'No',e.phone,e.notes])];
+  download(`onward-bold-calls-${dkey(new Date())}.csv`,rows.map(r=>r.map(q).join(',')).join('\n'),'text/csv')};
+$('exp-json').onclick=()=>download(`onward-bold-backup-${dkey(new Date())}.json`,JSON.stringify(S),'application/json');
+$('imp').onclick=()=>$('impfile').click();
+$('impfile').onchange=async()=>{try{const s=JSON.parse(await $('impfile').files[0].text());
+  if(!s.entries)throw 0;if(!confirm('Replace all current data with this backup?'))return;
+  S=s;S.settings=S.settings||{weekly:100,days:[1,2,3,4,5]};S.celebrated=S.celebrated||{};save();renderSettings();render();toast('Backup restored')}catch(e){toast('That file is not a valid backup')}};
+$('fxtest').onclick=()=>confetti();
+
+// toast
+let tt;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),3500)}
+
+// confetti
+const cv=$('fx'),cx=cv.getContext('2d');let parts=[],raf=0;
+function size(){cv.width=innerWidth*devicePixelRatio;cv.height=innerHeight*devicePixelRatio}
+addEventListener('resize',size);size();
+function confetti(big){
+  const cols=['#ff7a1a','#ffb347','#2ecc8f','#4f8cff','#ff5d6c','#c4a6ff','#ffffff'],r=devicePixelRatio;
+  const n=big?420:220;
+  for(let i=0;i<n;i++){
+    const side=i%3; // two cannons + top rain
+    const x=side===0?0:side===1?cv.width:Math.random()*cv.width;
+    const y=side===2?-20*r:cv.height*.75;
+    const ang=side===0?-Math.PI/3+Math.random()*.5:side===1?-2*Math.PI/3-Math.random()*.5:Math.PI/2;
+    const sp=(side===2?3:14+Math.random()*12)*r*(.6+Math.random()*.6);
+    parts.push({x,y,vx:Math.cos(ang)*sp+(Math.random()-.5)*4*r,vy:Math.sin(ang)*sp,w:(6+Math.random()*7)*r,h:(10+Math.random()*8)*r,
+      rot:Math.random()*6,vr:(Math.random()-.5)*.35,c:cols[i%cols.length],life:0,max:200+Math.random()*120,circ:Math.random()<.25});
+  }
+  if(!raf)raf=requestAnimationFrame(tick);
+}
+function tick(){
+  cx.clearRect(0,0,cv.width,cv.height);const r=devicePixelRatio;
+  parts=parts.filter(p=>p.life<p.max&&p.y<cv.height+40);
+  for(const p of parts){
+    p.life++;p.vy+=.35*r;p.vx*=.992;p.vy*=.992;p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr;
+    cx.save();cx.globalAlpha=Math.min(1,(p.max-p.life)/40);cx.translate(p.x,p.y);cx.rotate(p.rot);cx.fillStyle=p.c;
+    if(p.circ){cx.beginPath();cx.arc(0,0,p.w/2,0,7);cx.fill()}else cx.fillRect(-p.w/2,-p.h/2,p.w,p.h*Math.abs(Math.cos(p.rot*2)));
+    cx.restore();
+  }
+  raf=parts.length?requestAnimationFrame(tick):0;if(!raf)cx.clearRect(0,0,cv.width,cv.height);
+}
+
+$('date').value=dkey(new Date());
+renderSettings();render();
+// refresh if the app stays open past midnight
+setInterval(()=>{if($('date').value!==dkey(new Date())&&document.activeElement.id!=='date'){$('date').value=dkey(new Date());render()}},60000);
+})();
+</script>
+</body>
+</html>
