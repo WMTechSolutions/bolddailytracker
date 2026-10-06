@@ -98,7 +98,7 @@ function render() {
   $('logcount').textContent = te.length ? `· ${te.length}` : '';
   $('todaylog').innerHTML = te.length ? te.map(entryHTML).join('') : '<div class="empty">Nothing logged yet today. Go get \'em.</div>';
 
-  renderWeek(c); renderPeople(); renderNumbers();
+  applyCats(); renderWeek(c); renderPeople(); renderNumbers();
 }
 function entryHTML(e) {
   const t = new Date(e.ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
@@ -129,12 +129,23 @@ function people() {
   });
   return Object.values(m).sort((a, b) => a.name.localeCompare(b.name));
 }
+// Non-leaders only see "Real Estate Client"; leaders see every category.
+const catVisible = k => S.settings.leader || k === 'client';
+function applyCats() {
+  document.querySelectorAll('#cat input').forEach(i => {
+    const show = catVisible(i.value);
+    i.classList.toggle('hide', !show); document.querySelector(`label[for="${i.id}"]`).classList.toggle('hide', !show);
+    if (!show && i.checked) document.querySelector('#cat input[value=client]').checked = true;
+  });
+  [...$('filt').options].forEach(o => { o.hidden = !!o.value && !catVisible(o.value); });
+  if ($('filt').selectedOptions[0]?.hidden) $('filt').value = '';
+}
 function renderPeople() {
   const q = $('q').value.trim().toLowerCase(), f = $('filt').value;
   const list = people().filter(p => (!f || p.cat === f) && (!q || p.name.toLowerCase().includes(q) || p.phone.toLowerCase().includes(q)));
   $('people').innerHTML = list.length ? list.map(p => `<div class="entry"><div class="main"><div class="nm">${esc(p.name)}</div>
     <div class="meta">${p.n} conversation${p.n === 1 ? '' : 's'} · last ${fromKey(p.lastDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}${p.phone ? ' · ' + esc(p.phone) : ''}</div></div>
-    <select data-cat="${esc(p.name.toLowerCase())}" style="width:auto">${Object.entries(CATS).map(([k, v]) => `<option value="${k}" ${k === p.cat ? 'selected' : ''}>${v}</option>`).join('')}</select></div>`).join('')
+    <select data-cat="${esc(p.name.toLowerCase())}" style="width:auto">${Object.entries(CATS).filter(([k]) => catVisible(k) || k === p.cat).map(([k, v]) => `<option value="${k}" ${k === p.cat ? 'selected' : ''}>${v}</option>`).join('')}</select></div>`).join('')
     : '<div class="empty">No one here yet.</div>';
 }
 
@@ -146,7 +157,7 @@ $('nav').onclick = e => {
 };
 $('name').addEventListener('input', () => {
   const p = people().find(p => p.name.toLowerCase() === $('name').value.trim().toLowerCase());
-  if (p) { document.querySelector(`input[name=cat][value=${p.cat}]`).checked = true; if (p.phone && !$('phone').value) $('phone').value = p.phone; }
+  if (p) { if (catVisible(p.cat)) document.querySelector(`input[name=cat][value=${p.cat}]`).checked = true; if (p.phone && !$('phone').value) $('phone').value = p.phone; }
 });
 
 $('form').onsubmit = async ev => {
