@@ -173,7 +173,7 @@ $('form').onsubmit = async ev => {
   const btn = $('logbtn'); btn.disabled = true;
   const { data, error } = await sb.from('conversations').insert(row).select().single();
   btn.disabled = false;
-  if (error) { toast('⚠️ Not saved: ' + error.message); return; }
+  if (error) { toast('⚠️ Not saved: ' + (error.message.includes('cat_check') ? 'the database is missing the latest category update. Tell Wesley.' : error.message)); return; }
   S.entries.push(fromRow(data));
   $('name').value = ''; $('phone').value = ''; $('notes').value = ''; $('two').checked = true; $('date').value = dkey(new Date());
   render();
@@ -303,7 +303,7 @@ applyTheme();
 
 // ---------- toast ----------
 let tt;
-function toast(m) { const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 3500); }
+function toast(m) { const t = $('toast'); t.textContent = m; t.classList.toggle('err', m.startsWith('⚠️')); t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 3500); }
 
 // ---------- confetti ----------
 const cv = $('fx'), cx = cv.getContext('2d'); let parts = [], raf = 0;

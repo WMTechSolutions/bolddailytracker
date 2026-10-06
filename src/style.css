@@ -107,3 +107,5 @@ nav button{font-size:14px}
 :root[data-theme=light] .logo{background:#000;border-radius:14px;padding:6px 12px}
 :root[data-theme=light] .toast{color:var(--on-good)}
 .toast{color:var(--on-good)}
+.toast.err{background:var(--bad);color:#fff}
+input[type=date]{min-width:0;max-width:100%;-webkit-appearance:none;appearance:none;min-height:46px;text-align:left}
