@@ -276,25 +276,50 @@ function tick() {
 }
 
 // ---------- auth ----------
-let signup = false;
+let mode = 'signin'; // signin | signup | forgot | reset
+let recovering = /type=recovery/.test(location.hash);
+function setMode(m) {
+  mode = m;
+  const t = { signin: ['Sign in', 'Sign in'], signup: ['Create account', 'Create account'], forgot: ['Reset password', 'Email me a reset link'], reset: ['Choose a new password', 'Save new password'] }[m];
+  $('auth-title').textContent = t[0]; $('a-submit').textContent = t[1];
+  $('a-email-wrap').classList.toggle('hide', m === 'reset');
+  $('a-email').required = m !== 'reset';
+  $('a-pass-wrap').classList.toggle('hide', m === 'forgot');
+  $('a-pass').required = m !== 'forgot';
+  $('a-pass-label').textContent = m === 'reset' ? 'New password (6+ characters)' : 'Password';
+  $('a-pass').autocomplete = m === 'signin' ? 'current-password' : 'new-password';
+  $('a-switch').textContent = m === 'signup' ? 'Have an account? Sign in' : m === 'signin' ? 'Need an account? Create one' : 'Back to sign in';
+  $('a-switch').classList.toggle('hide', m === 'reset');
+  $('a-forgot').classList.toggle('hide', m !== 'signin');
+  $('a-msg').textContent = '';
+}
 function showAuth(msg = '') { $('app').classList.add('hide'); $('auth').classList.remove('hide'); $('a-msg').textContent = msg; }
-$('a-switch').onclick = e => {
-  e.preventDefault(); signup = !signup;
-  $('auth-title').textContent = signup ? 'Create account' : 'Sign in';
-  $('a-submit').textContent = signup ? 'Create account' : 'Sign in';
-  $('a-switch').textContent = signup ? 'Have an account? Sign in' : 'Need an account? Create one';
-  $('a-pass').autocomplete = signup ? 'new-password' : 'current-password';
-};
+$('a-switch').onclick = e => { e.preventDefault(); setMode(mode === 'signin' ? 'signup' : 'signin'); };
+$('a-forgot').onclick = e => { e.preventDefault(); setMode('forgot'); };
 $('authform').onsubmit = async e => {
   e.preventDefault();
   const email = $('a-email').value.trim(), password = $('a-pass').value;
   $('a-msg').textContent = '';
-  const { data, error } = signup ? await sb.auth.signUp({ email, password }) : await sb.auth.signInWithPassword({ email, password });
+  if (mode === 'forgot') {
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin });
+    $('a-msg').textContent = error ? error.message : 'If that email has an account, a reset link is on its way. Check your inbox (and spam).';
+    return;
+  }
+  if (mode === 'reset') {
+    const { error } = await sb.auth.updateUser({ password });
+    if (error) { $('a-msg').textContent = error.message; return; }
+    recovering = false; history.replaceState(null, '', location.pathname);
+    const { data } = await sb.auth.getSession();
+    if (data.session) { current = data.session.user.id; enter(data.session); toast('Password updated'); }
+    return;
+  }
+  const { data, error } = mode === 'signup' ? await sb.auth.signUp({ email, password }) : await sb.auth.signInWithPassword({ email, password });
   if (error) { $('a-msg').textContent = error.message; return; }
-  if (signup && !data.session) $('a-msg').textContent = 'Check your email to confirm your account, then sign in.';
+  if (mode === 'signup' && !data.session) $('a-msg').textContent = 'Check your email to confirm your account, then sign in.';
 };
 $('signout').onclick = async e => { e.preventDefault(); await sb.auth.signOut(); };
 
+let current = null;
 async function enter(session) {
   user = session.user;
   $('auth').classList.add('hide'); $('app').classList.remove('hide');
@@ -307,11 +332,15 @@ async function enter(session) {
 if (!configured) {
   document.body.innerHTML = '<div style="padding:40px;font:16px system-ui;color:#eef2fb;max-width:520px;margin:auto"><h2>Supabase not configured</h2><p>Add <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> to your <code>.env</code> file (or Vercel environment variables) and restart.</p></div>';
 } else {
-  let current = null;
-  sb.auth.onAuthStateChange((_ev, session) => {
+  sb.auth.onAuthStateChange((ev, session) => {
+    if (ev === 'PASSWORD_RECOVERY') { recovering = true; setMode('reset'); showAuth(); return; }
+    if (recovering) return;
     if (session && session.user.id !== current) { current = session.user.id; enter(session); }
     else if (!session) { current = null; user = null; S.entries = []; showAuth(); }
   });
-  sb.auth.getSession().then(({ data }) => { if (!data.session) showAuth(); });
+  const hashErr = new URLSearchParams(location.hash.slice(1)).get('error_description');
+  if (recovering) { setMode('reset'); showAuth(); }
+  else if (hashErr) { history.replaceState(null, '', location.pathname); showAuth(hashErr.replaceAll('+', ' ') + '. Request a new reset link.'); }
+  sb.auth.getSession().then(({ data }) => { if (!data.session && !recovering && !hashErr) showAuth(); });
   setInterval(() => { if (user && $('date').value !== dkey(new Date()) && document.activeElement.id !== 'date') { $('date').value = dkey(new Date()); render(); } }, 60000);
 }
