@@ -82,8 +82,7 @@
       <h2>Log a conversation</h2>
       <form id="form" autocomplete="off">
         <label class="f">Name (agent or business)</label>
-        <input type="text" id="name" list="known" placeholder="Start typing…" required>
-        <datalist id="known"></datalist>
+        <input type="text" id="name" placeholder="Start typing…" required autocapitalize="words" autocorrect="off" spellcheck="false">
 
         <label class="f">They are a…</label>
         <div class="chips" id="cat">

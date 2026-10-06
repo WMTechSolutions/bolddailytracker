@@ -93,8 +93,6 @@ function render() {
   $('s-week').textContent = c.weekN; $('s-wg').textContent = c.wg; $('s-left').textContent = c.remaining; $('s-att').textContent = c.attempts;
   $('weekbar').style.width = Math.min(100, c.weekN / c.wg * 100) + '%';
 
-  $('known').innerHTML = people().map(p => `<option value="${esc(p.name)}">`).join('');
-
   const te = S.entries.filter(e => e.date === c.today).sort((a, b) => b.ts - a.ts);
   $('logcount').textContent = te.length ? `· ${te.length}` : '';
   $('todaylog').innerHTML = te.length ? te.map(entryHTML).join('') : '<div class="empty">Nothing logged yet today. Go get \'em.</div>';
