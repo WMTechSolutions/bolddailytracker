@@ -1,4 +1,5 @@
 import './style.css';
+import { setTheme, setSize, toggleTheme, applyTheme } from './theme.js';
 import { sb, configured } from './supabase.js';
 import { CATS, NUMS, LEADER_NUMS, exportCSV, exportXLSX } from './export.js';
 
@@ -293,6 +294,12 @@ $('nw-list').addEventListener('click', ev => {
   setNum(wkk, b.dataset.nm, cur + (+b.dataset.d));
 });
 $('nw-list').addEventListener('change', ev => { const k = ev.target.dataset.nin; if (k) setNum(dkey(nwStart()), k, ev.target.value); });
+
+// ---------- appearance ----------
+document.querySelectorAll('.themelink').forEach(a => a.addEventListener('click', e => { e.preventDefault(); toggleTheme(); }));
+document.querySelectorAll('input[name=th]').forEach(i => i.addEventListener('change', () => setTheme(i.value)));
+document.querySelectorAll('input[name=sz]').forEach(i => i.addEventListener('change', () => setSize(i.value)));
+applyTheme();
 
 // ---------- toast ----------
 let tt;

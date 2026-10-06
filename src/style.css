@@ -84,3 +84,26 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:50}
 .step input{width:56px;text-align:center;padding:9px 4px;font-weight:800;font-size:18px}
 .sechead{font-size:12px;color:var(--accent2);text-transform:uppercase;letter-spacing:1px;margin:16px 0 2px;font-weight:700}
 nav button{font-size:14px}
+
+/* ---- text size + light theme ---- */
+.wrap{zoom:var(--zoom,1)}
+.ring .sub,.date{font-size:14px}
+.step button.plus{color:#fff}
+.themelink{color:var(--mute)!important;cursor:pointer}
+.ring-track{stroke:var(--line)}
+:root{--on-good:#04251a}
+:root[data-theme=light]{
+  --bg:#f6f3fb; --card:#ffffff; --card2:#efe9f8; --line:#c9bde0; --text:#14101f; --mute:#4a4560;
+  --accent:#6735a3; --accent2:#5a2d91; --good:#0b7a4b; --bad:#b3261e; --on-good:#ffffff;
+}
+:root[data-theme=light] .card{box-shadow:0 1px 3px #2a164722}
+:root[data-theme=light] .pill.warn,:root[data-theme=light] .tag.one{background:#fde3cf;color:#8a3b00}
+:root[data-theme=light] .pill.ok{background:#d4f1e3;color:#0b5c45}
+:root[data-theme=light] .tag.client{background:#fbeccb;color:#6a4a00}
+:root[data-theme=light] .tag.recruit{background:#d5eef8;color:#0b4a63}
+:root[data-theme=light] .tag.current{background:#dbe8ff;color:#12427f}
+:root[data-theme=light] .tag.past{background:#fbe0f1;color:#8a1f61}
+:root[data-theme=light] .tag.biz{background:#d3f3e8;color:#0b5c45}
+:root[data-theme=light] .logo{background:#000;border-radius:14px;padding:6px 12px}
+:root[data-theme=light] .toast{color:var(--on-good)}
+.toast{color:var(--on-good)}
