@@ -356,34 +356,43 @@ function tick() {
 // ---------- auth ----------
 // New accounts start with the shared class password and must pick their own right away.
 const DEFAULT_PASSWORD = 'BOLD2026';
-let mode = 'signin'; // signin | signup | reset
+let mode = 'signin'; // signin | signup | forgot | reset
 let recovering = /type=recovery/.test(location.hash); // true while the user must set a new password
 function setMode(m) {
   mode = m;
-  const t = { signin: ['Sign in', 'Sign in'], signup: ['Create account', 'Create account'], reset: ['Choose your password', 'Save my password'] }[m];
+  const t = { signin: ['Sign in', 'Sign in'], signup: ['Create account', 'Create account'], forgot: ['Reset password', 'Email me a reset link'], reset: ['Choose your password', 'Save my password'] }[m];
   $('auth-title').textContent = t[0]; $('a-submit').textContent = t[1];
   $('a-email-wrap').classList.toggle('hide', m === 'reset');
   $('a-email').required = m !== 'reset';
-  $('a-pass-wrap').classList.toggle('hide', m === 'signup');
-  $('a-pass').required = m !== 'signup';
+  $('a-pass-wrap').classList.toggle('hide', m === 'signup' || m === 'forgot');
+  $('a-pass').required = m === 'signin' || m === 'reset';
   $('a-pass2-wrap').classList.toggle('hide', m !== 'reset');
   $('a-pass2').required = m === 'reset';
   $('a-pass-label').textContent = m === 'reset' ? 'New password (6+ characters)' : 'Password';
   $('a-pass').autocomplete = m === 'signin' ? 'current-password' : 'new-password';
-  $('a-switch').textContent = m === 'signup' ? 'Have an account? Sign in' : 'Need an account? Create one';
+  $('a-switch').textContent = m === 'signin' ? 'Need an account? Create one' : m === 'signup' ? 'Have an account? Sign in' : 'Back to sign in';
+  $('a-forgot').classList.toggle('hide', m !== 'signin');
   $('a-switch').classList.toggle('hide', m === 'reset');
   $('a-hint').classList.toggle('hide', m === 'reset');
   $('a-hint').textContent = m === 'signup'
     ? 'Enter your email. You\'ll start with the class password and choose your own on the next screen.'
-    : 'Forgot your password? Ask your instructor to reset it. You\'ll then sign in with the class password and pick a new one.';
+    : m === 'forgot' ? 'Enter your email and we\'ll send a link to choose a new password. Check spam too. No email? Ask your instructor to reset it.'
+    : 'Can\'t get in? Use "Forgot password?" above, or ask your instructor to reset it.';
   $('a-msg').textContent = '';
 }
 function showAuth(msg = '') { $('app').classList.add('hide'); $('auth').classList.remove('hide'); $('a-msg').textContent = msg; }
 $('a-switch').onclick = e => { e.preventDefault(); setMode(mode === 'signin' ? 'signup' : 'signin'); };
+$('a-forgot').onclick = e => { e.preventDefault(); setMode('forgot'); };
 $('authform').onsubmit = async e => {
   e.preventDefault();
   const email = $('a-email').value.trim();
   $('a-msg').textContent = '';
+
+  if (mode === 'forgot') {
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin });
+    $('a-msg').textContent = error ? error.message : 'If that email has an account, a reset link is on its way. It can take a few minutes. Check your spam folder.';
+    return;
+  }
 
   if (mode === 'reset') {
     const p1 = $('a-pass').value, p2 = $('a-pass2').value;
