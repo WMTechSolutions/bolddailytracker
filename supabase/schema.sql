@@ -5,7 +5,7 @@ create table if not exists public.conversations (
   user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
   name       text not null,
   cat        text not null check (cat in ('client','recruit','current','past','biz')),
-  ch         text not null check (ch in ('Call','Text','DM')),
+  ch         text not null check (ch in ('Call','Text','DM','In Person')),
   two        boolean not null default true,
   phone      text not null default '',
   notes      text not null default '',
