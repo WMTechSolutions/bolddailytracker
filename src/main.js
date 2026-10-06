@@ -219,6 +219,24 @@ $('set-days').onchange = async () => {
   S.settings.days = d; await saveSettings(); render();
 };
 
+// change password (signed-in users)
+$('pwform').onsubmit = async ev => {
+  ev.preventDefault();
+  const cur = $('pw-cur').value, p1 = $('pw-new').value, p2 = $('pw-new2').value, msg = $('pw-msg');
+  msg.textContent = '';
+  if (p1.length < 6) { msg.textContent = 'Use at least 6 characters.'; return; }
+  if (p1 === DEFAULT_PASSWORD) { msg.textContent = 'Pick a password different from the class password.'; return; }
+  if (p1 === cur) { msg.textContent = 'Your new password must be different from the current one.'; return; }
+  if (p1 !== p2) { msg.textContent = "Those passwords don't match."; return; }
+  $('pw-btn').disabled = true;
+  const { error: e1 } = await sb.auth.signInWithPassword({ email: user.email, password: cur });
+  if (e1) { msg.textContent = 'Your current password isn\'t right.'; $('pw-btn').disabled = false; return; }
+  const { error: e2 } = await sb.auth.updateUser({ password: p1 });
+  $('pw-btn').disabled = false;
+  if (e2) { msg.textContent = e2.message; return; }
+  $('pwform').reset(); toast('Password updated');
+};
+
 // export
 function setRange(a, b) { $('x-from').value = a; $('x-to').value = b; }
 function thisWeek() { const k = weekKeys(); setRange(k[0], k[6]); }

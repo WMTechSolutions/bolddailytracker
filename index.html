@@ -176,6 +176,19 @@
       <p class="date">Saved on this device only.</p>
     </div>
     <div class="card">
+      <h2>Change password</h2>
+      <form id="pwform" autocomplete="off">
+        <label class="f">Current password</label>
+        <input type="password" id="pw-cur" required autocomplete="current-password">
+        <label class="f">New password (6+ characters)</label>
+        <input type="password" id="pw-new" required minlength="6" autocomplete="new-password">
+        <label class="f">Confirm new password</label>
+        <input type="password" id="pw-new2" required minlength="6" autocomplete="new-password">
+        <button class="btn full" type="submit" id="pw-btn">Update password</button>
+        <p class="date" id="pw-msg"></p>
+      </form>
+    </div>
+    <div class="card">
       <h2>Export a report to turn in</h2>
       <div class="row2">
         <div><label class="f">From</label><input type="date" id="x-from"></div>
