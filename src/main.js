@@ -1,6 +1,6 @@
 import './style.css';
 import { sb, configured } from './supabase.js';
-import { CATS, exportCSV, exportXLSX } from './export.js';
+import { CATS, NUMS, LEADER_NUMS, exportCSV, exportXLSX } from './export.js';
 
 const DAYN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const $ = id => document.getElementById(id);
@@ -11,7 +11,7 @@ const fromKey = k => { const [y, m, d] = k.split('-').map(Number); return new Da
 function weekStart(d) { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; }
 function weekKeys(from = new Date()) { const ws = weekStart(from); return [...Array(7)].map((_, i) => { const d = new Date(ws); d.setDate(ws.getDate() + i); return dkey(d); }); }
 
-let S = { entries: [], settings: { weekly: 100, days: [1, 2, 3, 4, 5] } };
+let S = { entries: [], numbers: {}, settings: { weekly: 100, days: [1, 2, 3, 4, 5], leader: false } };
 let user = null;
 
 // ---------- per-device "already celebrated today" flag ----------
@@ -34,11 +34,14 @@ async function loadAll() {
   }
   S.entries = entries;
   const { data: st } = await sb.from('settings').select('*').maybeSingle();
-  if (st) S.settings = { weekly: st.weekly, days: st.days };
+  if (st) S.settings = { weekly: st.weekly, days: st.days, leader: !!st.is_leader };
+  const { data: nrows } = await sb.from('weekly_numbers').select('*');
+  S.numbers = {};
+  (nrows || []).forEach(r => { (S.numbers[r.week_start] ||= {})[r.metric] = r.count; });
 }
 
 async function saveSettings() {
-  const { error } = await sb.from('settings').upsert({ user_id: user.id, weekly: S.settings.weekly, days: S.settings.days });
+  const { error } = await sb.from('settings').upsert({ user_id: user.id, weekly: S.settings.weekly, days: S.settings.days, is_leader: !!S.settings.leader });
   if (error) toast('⚠️ Could not save settings: ' + error.message);
 }
 
@@ -95,7 +98,7 @@ function render() {
   $('logcount').textContent = te.length ? `· ${te.length}` : '';
   $('todaylog').innerHTML = te.length ? te.map(entryHTML).join('') : '<div class="empty">Nothing logged yet today. Go get \'em.</div>';
 
-  renderWeek(c); renderPeople();
+  renderWeek(c); renderPeople(); renderNumbers();
 }
 function entryHTML(e) {
   const t = new Date(e.ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
@@ -139,7 +142,7 @@ function renderPeople() {
 $('nav').onclick = e => {
   const t = e.target.dataset.t; if (!t) return;
   document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b === e.target));
-  ['today', 'week', 'people', 'settings'].forEach(x => $('tab-' + x).classList.toggle('hide', x !== t));
+  ['today', 'numbers', 'week', 'people', 'settings'].forEach(x => $('tab-' + x).classList.toggle('hide', x !== t));
 };
 $('name').addEventListener('input', () => {
   const p = people().find(p => p.name.toLowerCase() === $('name').value.trim().toLowerCase());
@@ -194,9 +197,11 @@ $('q').oninput = renderPeople; $('filt').onchange = renderPeople;
 
 // settings
 function renderSettings() {
+  $('set-leader').checked = !!S.settings.leader;
   $('set-weekly').value = S.settings.weekly;
   $('set-days').innerHTML = [1, 2, 3, 4, 5, 6, 0].map(i => `<input type="checkbox" id="wd${i}" ${S.settings.days.includes(i) ? 'checked' : ''}><label for="wd${i}">${DAYN[i]}</label>`).join('');
 }
+$('set-leader').onchange = async () => { S.settings.leader = $('set-leader').checked; await saveSettings(); render(); };
 $('set-weekly').onchange = async () => { S.settings.weekly = Math.max(1, +$('set-weekly').value || 100); await saveSettings(); render(); };
 $('set-days').onchange = async () => {
   const d = [1, 2, 3, 4, 5, 6, 0].filter(i => $('wd' + i).checked);
@@ -215,7 +220,7 @@ function range() {
   if (!a || !b || a > b) { toast('Pick a valid date range'); return null; }
   return [a, b];
 }
-$('exp-xlsx').onclick = async () => { const r = range(); if (!r) return; $('exp-xlsx').disabled = true; try { await exportXLSX(S.entries, r[0], r[1], S.settings.weekly); } catch (e) { toast('⚠️ Export failed: ' + e.message); } $('exp-xlsx').disabled = false; };
+$('exp-xlsx').onclick = async () => { const r = range(); if (!r) return; $('exp-xlsx').disabled = true; try { await exportXLSX(S.entries, r[0], r[1], S.settings.weekly, S.numbers, S.settings.leader); } catch (e) { toast('⚠️ Export failed: ' + e.message); } $('exp-xlsx').disabled = false; };
 $('exp-csv').onclick = () => { const r = range(); if (r) exportCSV(S.entries, r[0], r[1]); };
 
 // import old backup (from the offline version)
@@ -238,6 +243,44 @@ $('impfile').onchange = async () => {
   $('impfile').value = '';
 };
 $('fxtest').onclick = () => confetti();
+
+// ---------- weekly numbers ----------
+let nwOffset = 0; // 0 = this week, -1 = last week ...
+function nwStart() { const d = weekStart(new Date()); d.setDate(d.getDate() + nwOffset * 7); return d; }
+function setNum(week, key, val) {
+  val = Math.max(0, Math.min(9999, Math.floor(+val) || 0));
+  (S.numbers[week] ||= {})[key] = val;
+  renderNumbers();
+  sb.from('weekly_numbers').upsert({ user_id: user.id, week_start: week, metric: key, count: val }, { onConflict: 'user_id,week_start,metric' })
+    .then(({ error }) => { if (error) toast('⚠️ Not saved: ' + error.message); });
+}
+function renderNumbers() {
+  const ws = nwStart(), wk = weekKeys(ws), week = dkey(ws);
+  const end = fromKey(wk[6]), fmt = d => d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  $('nw-label').innerHTML = `Week of ${fmt(ws)} – ${fmt(end)}${nwOffset === 0 ? ' <span class="pill ok">this week</span>' : nwOffset === -1 ? ' <span class="pill">last week</span>' : ''}`;
+  $('nw-next').disabled = nwOffset >= 0;
+  const conv = S.entries.filter(e => e.two && wk.includes(e.date));
+  const agent = conv.filter(e => ['client', 'current', 'past'].includes(e.cat)).length;
+  const recruit = conv.filter(e => e.cat === 'recruit').length;
+  const row = (label, n) => `<div class="numrow"><div class="nl">${label}</div><div class="nv">${n}</div></div>`;
+  $('nw-auto').innerHTML = row('Conversations Made', agent) + (S.settings.leader ? row('Recruit Conversations Made', recruit) : '')
+    + `<div class="date" style="margin-top:6px">Counted from the two-way conversations you logged (${conv.length} total this week toward your ${S.settings.weekly}, including business customers).</div>`;
+  const nums = S.numbers[week] || {};
+  const stepper = n => `<div class="numrow"><div class="nl">${n.l}</div><div class="step">
+    <button data-nm="${n.k}" data-d="-1" aria-label="minus">−</button>
+    <input type="number" min="0" inputmode="numeric" data-nin="${n.k}" value="${nums[n.k] || 0}">
+    <button class="plus" data-nm="${n.k}" data-d="1" aria-label="plus">+</button></div></div>`;
+  $('nw-list').innerHTML = `<div class="sechead">Agent</div>${NUMS.map(stepper).join('')}`
+    + (S.settings.leader ? `<div class="sechead">Leadership</div>${LEADER_NUMS.map(stepper).join('')}` : '');
+}
+$('nw-prev').onclick = () => { nwOffset--; renderNumbers(); };
+$('nw-next').onclick = () => { if (nwOffset < 0) { nwOffset++; renderNumbers(); } };
+$('nw-list').addEventListener('click', ev => {
+  const b = ev.target.closest('[data-nm]'); if (!b) return;
+  const wkk = dkey(nwStart()), cur = (S.numbers[wkk] || {})[b.dataset.nm] || 0;
+  setNum(wkk, b.dataset.nm, cur + (+b.dataset.d));
+});
+$('nw-list').addEventListener('change', ev => { const k = ev.target.dataset.nin; if (k) setNum(dkey(nwStart()), k, ev.target.value); });
 
 // ---------- toast ----------
 let tt;
@@ -355,7 +398,7 @@ if (!configured) {
     if (recovering) return;
     if (session && session.user.user_metadata?.must_change) { recovering = true; setMode('reset'); showAuth('Choose your own password to continue.'); return; }
     if (session && session.user.id !== current) { current = session.user.id; enter(session); }
-    else if (!session) { current = null; user = null; S.entries = []; showAuth(); }
+    else if (!session) { current = null; user = null; S.entries = []; S.numbers = {}; showAuth(); }
   });
   const hashErr = new URLSearchParams(location.hash.slice(1)).get('error_description');
   setMode(recovering ? 'reset' : 'signin');

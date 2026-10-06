@@ -73,3 +73,14 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:50}
 .logo.big{height:110px;margin:0 auto}
 @media(max-width:520px){.logo{height:52px}}
 #auth header{justify-content:center;margin-top:24px}
+.weeknav{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:700;text-align:center}
+.numrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-top:1px solid var(--line)}
+.numrow:first-child{border-top:0}
+.numrow .nl{flex:1;font-weight:600}
+.numrow .nv{font-size:22px;font-weight:800;min-width:44px;text-align:right}
+.step{display:flex;align-items:center;gap:6px}
+.step button{width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--card2);color:var(--text);font-size:22px;font-weight:700;cursor:pointer}
+.step button.plus{background:var(--accent);border-color:var(--accent)}
+.step input{width:56px;text-align:center;padding:9px 4px;font-weight:800;font-size:18px}
+.sechead{font-size:12px;color:var(--accent2);text-transform:uppercase;letter-spacing:1px;margin:16px 0 2px;font-weight:700}
+nav button{font-size:14px}

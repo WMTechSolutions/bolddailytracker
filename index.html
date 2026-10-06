@@ -44,7 +44,8 @@
   </header>
   <nav id="nav">
     <button data-t="today" class="on">Today</button>
-    <button data-t="week">This Week</button>
+    <button data-t="numbers">Numbers</button>
+    <button data-t="week">Week</button>
     <button data-t="people">People</button>
     <button data-t="settings">Settings</button>
   </nav>
@@ -118,6 +119,17 @@
     </div>
   </section>
 
+  <!-- NUMBERS -->
+  <section id="tab-numbers" class="hide">
+    <div class="card">
+      <div class="weeknav"><button class="btn ghost" id="nw-prev" aria-label="Previous week">‹</button><div id="nw-label"></div><button class="btn ghost" id="nw-next" aria-label="Next week">›</button></div>
+      <h2 style="margin-top:16px">Filled in for you from your log</h2>
+      <div id="nw-auto"></div>
+      <h2 style="margin-top:20px">Your numbers — tap + as they happen</h2>
+      <div id="nw-list"></div>
+    </div>
+  </section>
+
   <!-- WEEK -->
   <section id="tab-week" class="hide">
     <div class="card"><h2>This week</h2><div id="weekdays"></div><div id="weeksum" class="date" style="margin-top:14px"></div></div>
@@ -143,6 +155,7 @@
       <input type="number" id="set-weekly" min="1">
       <label class="f">Days you work (the weekly goal is spread across these)</label>
       <div class="chips days" id="set-days"></div>
+      <label class="toggle"><input type="checkbox" id="set-leader"><span><b>I'm a leader</b><br><span class="date">Shows the recruiting numbers (recruits added, recruiting appointments, recruits signed) on the Numbers tab and in your report.</span></span></label>
       <p class="date">Each day's goal = what's still needed this week ÷ work days left (including today). Miss a day and tomorrow's goal goes up automatically; overshoot and it comes down.</p>
     </div>
     <div class="card">

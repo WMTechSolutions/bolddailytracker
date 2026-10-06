@@ -1,4 +1,20 @@
 export const CATS = { client: 'Real Estate Client', recruit: 'Recruit', current: 'Current Agent', past: 'Past Agent', biz: 'Business Customer' };
+// Weekly numbers BOLD asks for (l = short label in the app, r = wording on the BOLD report)
+export const NUMS = [
+  { k: 'contacts_added', l: 'Contacts added to database', r: 'Contacts Added to Database' },
+  { k: 'listing_appts', l: 'Listing appointments gone on', r: 'Total Listing Appointments Gone On Last Week' },
+  { k: 'buyer_appts', l: 'Buyer appointments gone on', r: 'Total Buyer Appointments Gone On Last Week' },
+  { k: 'listings_taken', l: 'Listings taken', r: 'Total Listings Taken Last Week' },
+  { k: 'buyers_taken', l: 'Buyers taken', r: 'Total Buyers Taken Last Week' },
+  { k: 'under_contract', l: 'Under contract', r: 'Total Under Contract' },
+];
+export const LEADER_NUMS = [
+  { k: 'recruits_added', l: 'Recruits added to database', r: 'Recruits Added to Database' },
+  { k: 'recruiting_appts', l: 'Recruiting appointments', r: 'Recruiting Appts (for Leaders)' },
+  { k: 'recruits_signed', l: 'Recruits signed', r: 'Recruits Signed (for Leaders)' },
+];
+const AGENT_CATS = ['client', 'current', 'past'];
+
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 const pad = n => String(n).padStart(2, '0');
@@ -25,7 +41,7 @@ export function exportCSV(entries, from, to) {
   download(`onward-bold-calls-${from}_to_${to}.csv`, new Blob([rows.map(r => r.map(q).join(',')).join('\n')], { type: 'text/csv' }));
 }
 
-export async function exportXLSX(entries, from, to, weeklyGoal) {
+export async function exportXLSX(entries, from, to, weeklyGoal, numbers = {}, isLeader = false) {
   const ExcelJS = (await import('exceljs')).default;
   const list = inRange(entries, from, to);
   const two = list.filter(e => e.two);
@@ -38,6 +54,32 @@ export async function exportXLSX(entries, from, to, weeklyGoal) {
     c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PURPLE } };
     c.alignment = { vertical: 'middle' };
   });
+
+  // ---- BOLD Report (matches the weekly BOLD categories) ----
+  const mondayOf = k => { const d = fromKey(k); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return toKey(d); };
+  const sums = {};
+  for (const [ws, m] of Object.entries(numbers)) {
+    if (ws >= mondayOf(from) && ws <= to) for (const [k, v] of Object.entries(m)) sums[k] = (sums[k] || 0) + v;
+  }
+  const r = wb.addWorksheet('BOLD Report');
+  r.columns = [{ width: 52 }, { width: 14 }];
+  r.addRow(['Onward BOLD — Weekly Numbers']).font = { bold: true, size: 16 };
+  r.addRow([`${pretty(from)} – ${pretty(to)}`]).font = { color: { argb: 'FF666666' } };
+  r.addRow([]);
+  const section = (title, rows) => {
+    head(r.addRow([title, '']));
+    rows.forEach(([label, n]) => { const row = r.addRow([label, n]); row.getCell(2).alignment = { horizontal: 'right' }; row.getCell(2).font = { bold: true }; });
+    r.addRow([]);
+  };
+  section('AGENTS', [
+    ['Conversations Made', two.filter(e => AGENT_CATS.includes(e.cat)).length],
+    ...NUMS.map(n => [n.r, sums[n.k] || 0]),
+  ]);
+  if (isLeader) section('LEADERSHIP', [
+    ['Recruit Conversations Made', two.filter(e => e.cat === 'recruit').length],
+    ...LEADER_NUMS.map(n => [n.r, sums[n.k] || 0]),
+  ]);
+  r.addRow(['Conversations Made = two-way conversations with Real Estate Clients, Current Agents and Past Agents.']).font = { italic: true, color: { argb: 'FF888888' } };
 
   // ---- Summary ----
   const s = wb.addWorksheet('Summary');
