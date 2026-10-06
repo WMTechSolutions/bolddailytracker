@@ -276,46 +276,64 @@ function tick() {
 }
 
 // ---------- auth ----------
-let mode = 'signin'; // signin | signup | forgot | reset
-let recovering = /type=recovery/.test(location.hash);
+// New accounts start with the shared class password and must pick their own right away.
+const DEFAULT_PASSWORD = 'BOLD2026';
+let mode = 'signin'; // signin | signup | reset
+let recovering = /type=recovery/.test(location.hash); // true while the user must set a new password
 function setMode(m) {
   mode = m;
-  const t = { signin: ['Sign in', 'Sign in'], signup: ['Create account', 'Create account'], forgot: ['Reset password', 'Email me a reset link'], reset: ['Choose a new password', 'Save new password'] }[m];
+  const t = { signin: ['Sign in', 'Sign in'], signup: ['Create account', 'Create account'], reset: ['Choose your password', 'Save my password'] }[m];
   $('auth-title').textContent = t[0]; $('a-submit').textContent = t[1];
   $('a-email-wrap').classList.toggle('hide', m === 'reset');
   $('a-email').required = m !== 'reset';
-  $('a-pass-wrap').classList.toggle('hide', m === 'forgot');
-  $('a-pass').required = m !== 'forgot';
+  $('a-pass-wrap').classList.toggle('hide', m === 'signup');
+  $('a-pass').required = m !== 'signup';
+  $('a-pass2-wrap').classList.toggle('hide', m !== 'reset');
+  $('a-pass2').required = m === 'reset';
   $('a-pass-label').textContent = m === 'reset' ? 'New password (6+ characters)' : 'Password';
   $('a-pass').autocomplete = m === 'signin' ? 'current-password' : 'new-password';
-  $('a-switch').textContent = m === 'signup' ? 'Have an account? Sign in' : m === 'signin' ? 'Need an account? Create one' : 'Back to sign in';
+  $('a-switch').textContent = m === 'signup' ? 'Have an account? Sign in' : 'Need an account? Create one';
   $('a-switch').classList.toggle('hide', m === 'reset');
-  $('a-forgot').classList.toggle('hide', m !== 'signin');
+  $('a-hint').classList.toggle('hide', m === 'reset');
+  $('a-hint').textContent = m === 'signup'
+    ? 'Enter your email. You\'ll start with the class password and choose your own on the next screen.'
+    : 'Forgot your password? Ask your instructor to reset it. You\'ll then sign in with the class password and pick a new one.';
   $('a-msg').textContent = '';
 }
 function showAuth(msg = '') { $('app').classList.add('hide'); $('auth').classList.remove('hide'); $('a-msg').textContent = msg; }
 $('a-switch').onclick = e => { e.preventDefault(); setMode(mode === 'signin' ? 'signup' : 'signin'); };
-$('a-forgot').onclick = e => { e.preventDefault(); setMode('forgot'); };
 $('authform').onsubmit = async e => {
   e.preventDefault();
-  const email = $('a-email').value.trim(), password = $('a-pass').value;
+  const email = $('a-email').value.trim();
   $('a-msg').textContent = '';
-  if (mode === 'forgot') {
-    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin });
-    $('a-msg').textContent = error ? error.message : 'If that email has an account, a reset link is on its way. Check your inbox (and spam).';
-    return;
-  }
+
   if (mode === 'reset') {
-    const { error } = await sb.auth.updateUser({ password });
+    const p1 = $('a-pass').value, p2 = $('a-pass2').value;
+    if (p1.length < 6) { $('a-msg').textContent = 'Use at least 6 characters.'; return; }
+    if (p1 === DEFAULT_PASSWORD) { $('a-msg').textContent = 'Pick a password different from the class password.'; return; }
+    if (p1 !== p2) { $('a-msg').textContent = 'Those passwords don\'t match.'; return; }
+    const { error } = await sb.auth.updateUser({ password: p1, data: { must_change: false } });
     if (error) { $('a-msg').textContent = error.message; return; }
     recovering = false; history.replaceState(null, '', location.pathname);
+    $('a-pass').value = ''; $('a-pass2').value = '';
     const { data } = await sb.auth.getSession();
-    if (data.session) { current = data.session.user.id; enter(data.session); toast('Password updated'); }
+    if (data.session) { current = data.session.user.id; enter(data.session); toast('Password saved. Welcome!'); }
     return;
   }
-  const { data, error } = mode === 'signup' ? await sb.auth.signUp({ email, password }) : await sb.auth.signInWithPassword({ email, password });
-  if (error) { $('a-msg').textContent = error.message; return; }
-  if (mode === 'signup' && !data.session) $('a-msg').textContent = 'Check your email to confirm your account, then sign in.';
+
+  const password = mode === 'signup' ? DEFAULT_PASSWORD : $('a-pass').value;
+  const mustChange = mode === 'signup' || password === DEFAULT_PASSWORD;
+  if (mustChange) recovering = true; // hold the app back until a new password is set
+  const { data, error } = mode === 'signup'
+    ? await sb.auth.signUp({ email, password, options: { data: { must_change: true } } })
+    : await sb.auth.signInWithPassword({ email, password });
+  if (error) { recovering = false; $('a-msg').textContent = error.message; return; }
+  if (!data.session) { recovering = false; $('a-msg').textContent = 'Check your email to confirm your account, then sign in.'; return; }
+  if (mustChange) {
+    if (!data.user.user_metadata?.must_change) await sb.auth.updateUser({ data: { must_change: true } });
+    $('a-pass').value = '';
+    setMode('reset'); showAuth('Welcome! Choose your own password to continue.');
+  }
 };
 $('signout').onclick = async e => { e.preventDefault(); await sb.auth.signOut(); };
 
@@ -335,11 +353,13 @@ if (!configured) {
   sb.auth.onAuthStateChange((ev, session) => {
     if (ev === 'PASSWORD_RECOVERY') { recovering = true; setMode('reset'); showAuth(); return; }
     if (recovering) return;
+    if (session && session.user.user_metadata?.must_change) { recovering = true; setMode('reset'); showAuth('Choose your own password to continue.'); return; }
     if (session && session.user.id !== current) { current = session.user.id; enter(session); }
     else if (!session) { current = null; user = null; S.entries = []; showAuth(); }
   });
   const hashErr = new URLSearchParams(location.hash.slice(1)).get('error_description');
-  if (recovering) { setMode('reset'); showAuth(); }
+  setMode(recovering ? 'reset' : 'signin');
+  if (recovering) showAuth();
   else if (hashErr) { history.replaceState(null, '', location.pathname); showAuth(hashErr.replaceAll('+', ' ') + '. Request a new reset link.'); }
   sb.auth.getSession().then(({ data }) => { if (!data.session && !recovering && !hashErr) showAuth(); });
   setInterval(() => { if (user && $('date').value !== dkey(new Date()) && document.activeElement.id !== 'date') { $('date').value = dkey(new Date()); render(); } }, 60000);

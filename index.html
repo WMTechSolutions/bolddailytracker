@@ -25,10 +25,14 @@
         <label class="f" id="a-pass-label">Password</label>
         <input type="password" id="a-pass" required minlength="6" autocomplete="current-password">
       </div>
+      <div id="a-pass2-wrap" class="hide">
+        <label class="f">Confirm password</label>
+        <input type="password" id="a-pass2" minlength="6" autocomplete="new-password">
+      </div>
       <button class="btn full" type="submit" id="a-submit">Sign in</button>
     </form>
     <p class="date" style="margin-top:14px"><a href="#" id="a-switch" style="color:var(--accent2)">Need an account? Create one</a></p>
-    <p class="date"><a href="#" id="a-forgot" style="color:var(--accent2)">Forgot password?</a></p>
+    <p class="date" id="a-hint" style="margin-top:10px"></p>
     <p class="date" id="a-msg"></p>
   </div>
 </div>
@@ -80,7 +84,9 @@
 
         <label class="f">They are a…</label>
         <div class="chips" id="cat">
-          <input type="radio" name="cat" id="c1" value="current" checked><label for="c1">Current Agent</label>
+          <input type="radio" name="cat" id="c0" value="client" checked><label for="c0">Real Estate Client</label>
+          <input type="radio" name="cat" id="c4" value="recruit"><label for="c4">Recruit</label>
+          <input type="radio" name="cat" id="c1" value="current"><label for="c1">Current Agent</label>
           <input type="radio" name="cat" id="c2" value="past"><label for="c2">Past Agent</label>
           <input type="radio" name="cat" id="c3" value="biz"><label for="c3">Business Customer</label>
         </div>
@@ -123,7 +129,7 @@
     <div class="card">
       <div class="toolbar">
         <input type="text" id="q" placeholder="Search people…">
-        <select id="filt"><option value="">All types</option><option value="current">Current Agents</option><option value="past">Past Agents</option><option value="biz">Business Customers</option></select>
+        <select id="filt"><option value="">All types</option><option value="client">Real Estate Clients</option><option value="recruit">Recruits</option><option value="current">Current Agents</option><option value="past">Past Agents</option><option value="biz">Business Customers</option></select>
       </div>
       <div id="people"></div>
     </div>

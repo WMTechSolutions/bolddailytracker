@@ -4,7 +4,7 @@ create table if not exists public.conversations (
   id         uuid primary key default gen_random_uuid(),
   user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
   name       text not null,
-  cat        text not null check (cat in ('current','past','biz')),
+  cat        text not null check (cat in ('client','recruit','current','past','biz')),
   ch         text not null check (ch in ('Call','Text','DM')),
   two        boolean not null default true,
   phone      text not null default '',

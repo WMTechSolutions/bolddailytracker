@@ -1,4 +1,4 @@
-export const CATS = { current: 'Current Agent', past: 'Past Agent', biz: 'Business Customer' };
+export const CATS = { client: 'Real Estate Client', recruit: 'Recruit', current: 'Current Agent', past: 'Past Agent', biz: 'Business Customer' };
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 const pad = n => String(n).padStart(2, '0');

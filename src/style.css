@@ -53,7 +53,7 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--accent);border-c
 .entry .meta{font-size:13px;color:var(--mute)}
 .entry .nt{font-size:14px;margin-top:3px;white-space:pre-wrap}
 .tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;margin-right:4px;background:var(--card2)}
-.tag.current{background:#16355f;color:#8db8ff}.tag.past{background:#4a1d3d;color:#f0a6d8}.tag.biz{background:#14423a;color:#6fe0c0}
+.tag.client{background:#3a2d12;color:#f0cf7a}.tag.recruit{background:#0f3340;color:#7fd0ee}.tag.current{background:#16355f;color:#8db8ff}.tag.past{background:#4a1d3d;color:#f0a6d8}.tag.biz{background:#14423a;color:#6fe0c0}
 .tag.one{background:#2a1647;color:var(--accent2)}
 .x{background:none;border:0;color:var(--mute);cursor:pointer;font-size:18px;padding:2px 6px}
 .x:hover{color:var(--bad)}
