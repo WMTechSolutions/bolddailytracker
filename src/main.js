@@ -97,13 +97,18 @@ function render() {
   $('logcount').textContent = te.length ? `· ${te.length}` : '';
   $('todaylog').innerHTML = te.length ? te.map(entryHTML).join('') : '<div class="empty">Nothing logged yet today. Go get \'em.</div>';
 
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 14);
+  const waiting = S.entries.filter(e => !e.two && e.date >= dkey(cutoff)).sort((a, b) => b.ts - a.ts);
+  $('waitcount').textContent = waiting.length ? `· ${waiting.length}` : '';
+  $('waiting').innerHTML = waiting.length ? waiting.map(e => entryHTML(e, true)).join('') : '<div class="empty">No one is waiting on a reply.</div>';
   applyCats(); renderWeek(c); renderPeople(); renderNumbers();
 }
-function entryHTML(e) {
-  const t = new Date(e.ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+function entryHTML(e, showDate = false) {
+  const t = showDate ? fromKey(e.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) : new Date(e.ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
   return `<div class="entry"><div class="main"><div class="nm">${esc(e.name)}</div>
   <div class="meta"><span class="tag ${e.cat}">${CATS[e.cat]}</span>${e.two ? '' : '<span class="tag one">No reply</span>'}${esc(e.ch)} · ${t}${e.phone ? ' · ' + esc(e.phone) : ''}</div>
   ${e.notes ? `<div class="nt">${esc(e.notes)}</div>` : ''}</div>
+  ${e.two ? '' : `<button class="btn ghost sm" data-two="${e.id}">✓ They replied</button>`}
   <button class="x" data-del="${e.id}" title="Delete">✕</button></div>`;
 }
 function renderWeek(c) {
@@ -175,17 +180,32 @@ $('form').onsubmit = async ev => {
   S.entries.push(fromRow(data));
   $('name').value = ''; $('phone').value = ''; $('notes').value = ''; $('two').checked = true; $('date').value = dkey(new Date());
   render();
-  const after = calc();
-  if (row.two && after.mode !== 'rest' && before.mode !== 'done') {
-    const weekHit = before.weekN < before.wg && after.weekN >= after.wg;
-    const dayHit = before.goal > 0 && before.todayN < before.goal && after.todayN >= before.goal && !celeb.has(after.today);
-    if (weekHit) { celeb.set(after.today); confetti(true); toast(`🏆 WEEKLY GOAL HIT! ${after.wg} conversations!`); }
-    else if (dayHit) { celeb.set(after.today); confetti(); toast('🎉 Daily goal hit — nice work!'); }
-  }
+  if (row.two) celebrate(before);
   $('name').focus();
 };
 
+// Fires confetti if the change since `before` pushed today (or the week) over its goal.
+function celebrate(before) {
+  const after = calc();
+  if (after.mode === 'rest' || before.mode === 'done') return;
+  const weekHit = before.weekN < before.wg && after.weekN >= after.wg;
+  const dayHit = before.goal > 0 && before.todayN < before.goal && after.todayN >= before.goal && !celeb.has(after.today);
+  if (weekHit) { celeb.set(after.today); confetti(true); toast(`🏆 WEEKLY GOAL HIT! ${after.wg} conversations!`); }
+  else if (dayHit) { celeb.set(after.today); confetti(); toast('🎉 Daily goal hit — nice work!'); }
+}
+
 document.addEventListener('click', async ev => {
+  const tw = ev.target.dataset?.two;
+  if (tw) {
+    const e = S.entries.find(x => x.id === tw); if (!e) return;
+    const before = calc(), today = dkey(new Date());
+    ev.target.disabled = true;
+    const { error } = await sb.from('conversations').update({ two: true, date: today }).eq('id', tw);
+    if (error) { ev.target.disabled = false; toast('⚠️ ' + error.message); return; }
+    e.two = true; e.date = today;
+    render(); celebrate(before); toast('Marked as a two-way conversation');
+    return;
+  }
   const d = ev.target.dataset?.del;
   if (d && confirm('Delete this entry?')) {
     const { error } = await sb.from('conversations').delete().eq('id', d);
