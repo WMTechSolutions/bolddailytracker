@@ -146,11 +146,12 @@ function applyCats() {
 }
 function renderPeople() {
   const q = $('q').value.trim().toLowerCase(), f = $('filt').value;
-  const list = people().filter(p => (!f || p.cat === f) && (!q || p.name.toLowerCase().includes(q) || p.phone.toLowerCase().includes(q)));
+  const wk = weekKeys(), all = $('allpeople').checked;
+  const list = people().filter(p => (all || wk.includes(p.lastDate)) && (!f || p.cat === f) && (!q || p.name.toLowerCase().includes(q) || p.phone.toLowerCase().includes(q)));
   $('people').innerHTML = list.length ? list.map(p => `<div class="entry"><div class="main"><div class="nm">${esc(p.name)}</div>
     <div class="meta">${p.n} conversation${p.n === 1 ? '' : 's'} · last ${fromKey(p.lastDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}${p.phone ? ' · ' + esc(p.phone) : ''}</div></div>
     <select data-cat="${esc(p.name.toLowerCase())}" style="width:auto">${Object.entries(CATS).filter(([k]) => catVisible(k) || k === p.cat).map(([k, v]) => `<option value="${k}" ${k === p.cat ? 'selected' : ''}>${v}</option>`).join('')}</select></div>`).join('')
-    : '<div class="empty">No one here yet.</div>';
+    : `<div class="empty">${all ? 'No one here yet.' : 'No one contacted this week yet.'}</div>`;
 }
 
 // ---------- events ----------
@@ -223,7 +224,7 @@ $('people').addEventListener('change', async ev => {
   S.entries.forEach(e => { if (ids.includes(e.id)) e.cat = ev.target.value; });
   render();
 });
-$('q').oninput = renderPeople; $('filt').onchange = renderPeople;
+$('q').oninput = renderPeople; $('filt').onchange = renderPeople; $('allpeople').onchange = renderPeople;
 
 // settings
 function renderSettings() {
